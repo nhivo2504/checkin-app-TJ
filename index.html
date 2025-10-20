@@ -44,13 +44,11 @@
             font-size: 0.9em;
             font-weight: normal;
         }
-
         /* Các style cho thông báo */
         .success { background-color: #4CAF50; color: white; } /* Xanh lá */
         .error { background-color: #f44336; color: white; }   /* Đỏ */
         .invalid { background-color: #ff9800; color: white; } /* Cam */
         .processing { background-color: #2196F3; color: white; } /* Xanh dương */
-
     </style>
 </head>
 <body>
@@ -64,7 +62,7 @@
 
     <script>
         // ---------------------------------------------------------------
-        // !!! BƯỚC QUAN TRỌNG: DÁN URL CỦA BẠN VÀO ĐÂY !!!
+        // API URL CỦA BẠN ĐÃ ĐƯỢC DÁN SẴN
         // ---------------------------------------------------------------
         const API_URL = "https://script.google.com/macros/s/AKfycbzYU65k93Rne13SHEWqg2o7QpAQZ6Zzq2wzy1GJOB_Bcqkt6OZhsyZS8SWP6iJcJ0uB/exec"; 
         // ---------------------------------------------------------------
@@ -135,7 +133,6 @@
         
         // Bắt đầu quét
         html5QrcodeScanner.render(onScanSuccess);
-
     </script>
 </body>
 </html>
