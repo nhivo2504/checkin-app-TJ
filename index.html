@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>App Check-in (Quét Mã)</title>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f0f2f5; 
+            color: #333;
+        }
+        h1 { 
+            text-align: center; 
+            color: #1c1e21; 
+            font-size: 1.5em;
+        }
+        #reader { 
+            width: 95%; 
+            max-width: 400px; /* Tối ưu cho điện thoại */
+            margin: 20px auto; 
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden; /* Giữ cho camera nằm gọn */
+        }
+        #result { 
+            text-align: center; 
+            font-size: 1.1em; 
+            font-weight: bold;
+            margin: 20px auto; 
+            padding: 25px 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            display: none; /* Ẩn ban đầu */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        #result-guest {
+            font-size: 1.4em; /* Làm tên khách to rõ */
+            margin-bottom: 5px;
+        }
+        #result-message {
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+
+        /* Các style cho thông báo */
+        .success { background-color: #4CAF50; color: white; } /* Xanh lá */
+        .error { background-color: #f44336; color: white; }   /* Đỏ */
+        .invalid { background-color: #ff9800; color: white; } /* Cam */
+        .processing { background-color: #2196F3; color: white; } /* Xanh dương */
+
+    </style>
+</head>
+<body>
+
+    <h1>Quét Mã QR Check-in</h1>
+    <div id="reader"></div>
+    <div id="result">
+        <p id="result-guest"></p>
+        <p id="result-message"></p>
+    </div>
+
+    <script>
+        // ---------------------------------------------------------------
+        // !!! BƯỚC QUAN TRỌNG: DÁN URL CỦA BẠN VÀO ĐÂY !!!
+        // ---------------------------------------------------------------
+        const API_URL = "https://script.google.com/macros/s/AKfycbzYU65k93Rne13SHEWqg2o7QpAQZ6Zzq2wzy1GJOB_Bcqkt6OZhsyZS8SWP6iJcJ0uB/exec"; 
+        // ---------------------------------------------------------------
+
+        const resultDiv = document.getElementById('result');
+        const messageP = document.getElementById('result-message');
+        const guestP = document.getElementById('result-guest');
+        let isProcessing = false; // Cờ để ngăn quét nhiều lần
+
+        // Hàm này được gọi khi thư viện quét thấy mã QR
+        function onScanSuccess(decodedText, decodedResult) {
+            if (isProcessing) return; // Nếu đang xử lý, không quét nữa
+
+            isProcessing = true; // Đánh dấu là đang xử lý
+            
+            // Hiển thị trạng thái "đang xử lý"
+            showMessage("Đang xử lý...", "Đang kết nối...", "processing");
+            
+            // Gọi API (Google Apps Script) của bạn
+            // Dùng encodeURIComponent để đảm bảo mã QR được gửi đúng
+            fetch(`${API_URL}?qr=${encodeURIComponent(decodedText)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Xử lý kết quả trả về từ API
+                    if (data.status === "SUCCESS") {
+                        showMessage(data.guest, data.message, "success");
+                    } else if (data.status === "ERROR") {
+                        showMessage(data.guest, data.message, "error");
+                    } else { // INVALID
+                        showMessage("Lỗi", data.message, "invalid");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showMessage("Lỗi Mạng", "Không thể kết nối. Thử lại!", "error");
+                })
+                .finally(() => {
+                    // Sau 2.5 giây, bật lại camera để quét tiếp
+                    setTimeout(() => {
+                        hideMessage();
+                        isProcessing = false; // Cho phép quét lại
+                    }, 2500); // 2.5 giây
+                });
+        }
+        
+        // Hàm trợ giúp hiển thị thông báo
+        function showMessage(guest, message, type) {
+            guestP.innerText = guest;
+            messageP.innerText = message;
+            resultDiv.className = type; // Gán class CSS (success, error, invalid)
+            resultDiv.style.display = 'block';
+        }
+
+        // Hàm ẩn thông báo
+        function hideMessage() {
+            resultDiv.style.display = 'none';
+        }
+
+        // Khởi tạo trình quét
+        var html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", // ID của div để hiển thị camera
+            { 
+                fps: 10, // Số khung hình/giây
+                qrbox: { width: 250, height: 250 } // Kích thước ô vuông quét
+            },
+            /* verbose= */ false
+        );
+        
+        // Bắt đầu quét
+        html5QrcodeScanner.render(onScanSuccess);
+
+    </script>
+</body>
+</html>
